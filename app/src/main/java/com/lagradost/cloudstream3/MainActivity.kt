@@ -11,11 +11,14 @@ import android.content.res.Configuration
 import android.content.res.Resources
 import android.os.Build
 import android.os.Bundle
+import android.os.Environment
+import android.provider.MediaStore
 import android.view.*
 import android.widget.TextView
 import android.widget.Toast
 import androidx.annotation.StringRes
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.net.toUri
 import androidx.navigation.NavOptions
 import androidx.navigation.findNavController
 import androidx.navigation.fragment.NavHostFragment
@@ -48,6 +51,7 @@ import com.lagradost.cloudstream3.utils.UIHelper.shouldShowPIPMode
 import com.lagradost.cloudstream3.utils.UIHelper.toPx
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.fragment_result.*
+import java.io.File
 import java.util.*
 import kotlin.concurrent.thread
 
@@ -395,6 +399,25 @@ class MainActivity : AppCompatActivity(), ColorPickerDialogListener {
         // must give benenes to get beta providers
         try {
             val settingsManager = PreferenceManager.getDefaultSharedPreferences(this)
+            if (settingsManager.getString("DOWNLOAD_DIRECTORY", "null") == "null") {
+                // set the default download directory
+                val defaultDownloadDirectory = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                    MediaStore.Downloads.getContentUri(MediaStore.VOLUME_EXTERNAL_PRIMARY).toString()
+                } else {
+                    "${Environment.getExternalStorageDirectory()}/Download".replace(
+                        '/',
+                        File.separatorChar
+                    )
+                }
+                settingsManager.edit().putString("DOWNLOAD_DIRECTORY", defaultDownloadDirectory).apply()
+                if (defaultDownloadDirectory.contains("content://")) {
+                    val contentResolver = this.contentResolver
+                    val takeFlags: Int = Intent.FLAG_GRANT_READ_URI_PERMISSION or
+                            Intent.FLAG_GRANT_WRITE_URI_PERMISSION
+                    contentResolver.takePersistableUriPermission(defaultDownloadDirectory.toUri(), takeFlags)
+                }
+            }
+
             val count = settingsManager.getInt(getString(R.string.benene_count), 0)
             if (count > 30 && restrictedApis.size > 0 && !apis.contains(restrictedApis.first()))
                 apis.addAll(restrictedApis)

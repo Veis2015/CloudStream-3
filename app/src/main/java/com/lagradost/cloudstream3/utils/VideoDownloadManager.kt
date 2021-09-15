@@ -448,7 +448,7 @@ object VideoDownloadManager {
             return context.contentResolver?.getExistingFolderStartName(relativePath)
         } else {
             val normalPath =
-                "${Environment.getExternalStorageDirectory()}${File.separatorChar}${relativePath}".replace(
+                "${Environment.getExternalStorageDirectory()}/${relativePath}".replace(
                     '/',
                     File.separatorChar
                 )

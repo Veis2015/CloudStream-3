@@ -110,7 +110,7 @@ class KawaiifuProvider : MainAPI() {
         ).selectFirst(".list-ep").select("li").map {
             AnimeEpisode(
                 it.selectFirst("a").attr("href"),
-                if (it.text().trim().toIntOrNull() != null) "Episode ${it.text().trim()}" else it.text().trim()
+                it.text().trim().replace("Ep ", "Episode ")
             )
         }
         val poster = soup.selectFirst("a.thumb > img").attr("src")
